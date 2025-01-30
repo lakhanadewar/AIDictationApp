@@ -142,5 +142,5 @@ The app ensures user data is not stored, used for training, or shared with third
 
 ## Contact
 
-For issues or questions, please contact [support@example.com](mailto\:support@example.com).
+For issues or questions, please contact [lakhanadewar](mailto\:lakhanadewar@gmail.com).
 
