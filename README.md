@@ -4,10 +4,8 @@
 
 The AI Dictation App is a Flask-based application that allows users to:
 
-1. Transcribe audio files into clean and refined text.
+1. Record audio files into clean and refined text.
 2. Restyle existing text based on specific instructions.
-3. Translate text into different languages.
-4. View the application's privacy policy.
 
 This app leverages OpenAI's API for transcription and text processing, as well as Google Translate for multilingual support.
 
