@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Dictation App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f4f4f9;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px;
+      }
+      input,
+      textarea,
+      select,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background-color: #007bff;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .response {
+        padding: 10px;
+        background: #e8f5e9;
+        border: 1px solid #c8e6c9;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Dictation App</h1>
+
+      <button onclick="startRecording()">🎙 Start Recording</button>
+      <button onclick="stopRecording()">🛑 Stop Recording</button>
+      <textarea
+        id="speech-text"
+        rows="4"
+        placeholder="Your speech will appear here..."
+      ></textarea>
+
+      <label for="file">Attach Document (TXT, DOCX):</label>
+      <input type="file" id="file" accept=".txt,.docx" />
+      <button onclick="processFile()">Process Document</button>
+
+      <form id="restyle-form">
+        <label for="style">Choose Restyle Style:</label>
+        <select id="style" name="style" required>
+          <option value="formal">Formal</option>
+          <option value="casual">Casual</option>
+          <option value="professional">Professional</option>
+          <option value="friendly">Friendly</option>
+        </select>
+        <button type="button" onclick="processSpeechText()">Restyle</button>
+      </form>
+
+      <label for="restyled-text">Restyled Text:</label>
+      <textarea id="restyled-text" rows="4" readonly></textarea>
+
+      <div id="response" class="response" style="display: none"></div>
+    </div>
+
+    <script>
+      const baseUrl = "http://127.0.0.1:5000";
+      let recognition;
+
+      function startRecording() {
+        if (!("webkitSpeechRecognition" in window)) {
+          alert("Your browser does not support speech recognition.");
+          return;
+        }
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+
+        recognition.start();
+        recognition.onresult = function (event) {
+          document.getElementById("speech-text").value =
+            event.results[0][0].transcript;
+        };
+        recognition.onerror = function (event) {
+          alert("Error occurred in speech recognition: " + event.error);
+        };
+      }
+
+      function stopRecording() {
+        if (recognition) {
+          recognition.stop();
+        }
+      }
+
+      async function processSpeechText() {
+        const text = document.getElementById("speech-text").value;
+        const instruction = document.getElementById("style").value;
+
+        if (!text) {
+          alert("Please provide text first.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`${baseUrl}/restyle`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text, instruction }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          document.getElementById("restyled-text").value =
+            result.restyled_text || "No result returned.";
+        } catch (error) {
+          document.getElementById("restyled-text").value = "Network Error";
+          console.error("Fetch error:", error);
+        }
+      }
+
+      async function processFile() {
+        const fileInput = document.getElementById("file");
+        if (fileInput.files.length === 0) {
+          alert("Please select a file first.");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch(`${baseUrl}/process_file`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Error processing file.");
+          }
+
+          document.getElementById("speech-text").value =
+            result.processed_text || "No text extracted.";
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Error processing file: " + error.message);
+        }
+      }
+    </script>
+  </body>
+</html>
