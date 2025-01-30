@@ -8,8 +8,8 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # OpenAI API Key Setup
-
-
+openai.api_key = os.getenv("OPENAI_API_KEY", "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")  # Replace with your actual API key
+ 
 def read_text_file(file_path):
     """Reads a plain text file."""
     try:
